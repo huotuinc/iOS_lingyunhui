@@ -1,0 +1,112 @@
+//
+//  PrefixHeader.pch
+//  iOS_linyunhui
+//
+//  Created by 刘琛 on 16/5/16.
+//  Copyright © 2016年 cyjd. All rights reserved.
+//
+
+#ifndef PrefixHeader_pch
+#define PrefixHeader_pch
+
+#import <MJExtension/MJExtension.h>
+#import <MJRefresh/MJRefresh.h>
+#import <SVProgressHUD/SVProgressHUD.h>
+#import "UserLoginTool.h"
+#import <NJKWebViewProgress/NJKWebViewProgress.h>
+#import <NJKWebViewProgress/NJKWebViewProgressView.h>
+
+// Include any system framework and library headers here that should be included in all compilation units.
+// You will also need to set the Prefix Header build setting of one or more of your targets to reference this file.
+/******************************************************************************************************************************************/
+#define LWNewFeatureImageCount 3
+
+#define ScreenHeight  [UIScreen mainScreen].bounds.size.height
+#define ScreenWidth  [UIScreen mainScreen].bounds.size.width
+
+#define LWColor(r, g, b) [UIColor colorWithRed:(r)/255.0 green:(g)/255.0 blue:(b)/255.0 alpha:1.0]
+
+#define HuoBanMallBuyNavColor [UIColor colorWithRed:0.322 green:0.604 blue:0.110 alpha:1.000]
+
+/******************************************************************************************************************************************/
+
+/**微信支付*/
+#define WeiXinPayId @"wx7f47df3d33fd57f7"
+#define WeiXinPayMerchantId @"1323237601"
+#define wxpayKey @"21b7468d09e647ecae5580a2f458e68e"
+
+/**shareSDK */
+#define ShareSDKAppKey @"135e0c5dd084c"
+
+/**新浪微博*/
+#define XinLangAppkey @"2157595845"
+#define XinLangAppSecret @"deec3d7a7a59032d91fc7c788fd61039"
+#define XinLangRedirectUri @"https://api.weibo.com/oauth2/default.html"
+
+/**QQ**/
+#define QQAppKey @"1105337465"
+#define QQappSecret @"fTiZs1JDfss51pA6"
+
+/**微信*/
+#define WeiXinAppID @"wx7f47df3d33fd57f7"
+#define WeiXinAppSecret @"a98a14f00e2e358fb3cb8fe7ed06051b"
+
+
+
+/******************************************************************************************************************************************/
+
+//服务器正式地址
+#define MKMainUrl @"duobao.51flashmall.com:8091/app"
+
+
+/**时间*/
+#define apptimesSince1970 [NSString stringWithFormat:@"%.0f",([[[NSDate alloc] init] timeIntervalSince1970]*1000)]
+
+//网络请求的固定参数
+#define HTYMRSCREAT @"4165a8d240b29af3f41818d10599d0d1"  //火图安全网络请求安全协议
+
+/**平台*/
+#define OPERATION_parame @"duobao2016AP"
+
+/**应用版本号*/
+#define AppVersion [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"]
+
+/**设备唯一号*/
+#define  DeviceNo ([[UIDevice currentDevice].identifierForVendor UUIDString])
+
+
+/**判断iOS版本*/
+
+#define IsIos8 ([[[UIDevice currentDevice] systemVersion] doubleValue] >= 8.0)
+
+/**APP token */
+#define AppToken @"AppToken"
+
+
+/*********用户属性*****************/
+#define CannelLoginFailure @"CannelLogin" //取消登陆
+#define UserInfo @"UserInfo"
+#define GlobalInfo @"GlobalInfo"
+#define DefaultAddress @"DefaultAddress"
+
+/********登陆标志************/
+#define LoginStatus @"LoginStatus" //登录标志
+#define Success @"Success" //成功
+#define Failure @"Failure" //失败
+
+/*********商城******/
+#define PayTypeflat @"paytype" //支付数据存档
+#define HuoBanMallBuyAppId @"huotu686ad1fe2bd8a02ok" // app签名用于商城
+#define HuoBanMallBuyApp_Merchant_Id @"6987" //商户号
+#define WebSit @"WebSit" // 商城支付回调地址
+#define LoginFromMallNot @"LoginFromMallNot"  //商城登录成功后发送的通知
+#define GotoMallSecond @"GotoMallSecond" //bar点击商城载入
+
+
+#ifdef DEBUG
+#define LWLog(...) NSLog(__VA_ARGS__)
+#else
+#define LWLog(...)
+#endif
+
+#endif /* PrefixHeader_pch */

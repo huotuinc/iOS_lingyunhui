@@ -5,6 +5,22 @@
    <BuildAction
       parallelizeBuildables = "YES"
       buildImplicitDependencies = "YES">
+      <BuildActionEntries>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "6018C86F1CF8433400C085A5"
+               BuildableName = "iOS_lingyunhui.app"
+               BlueprintName = "iOS_lingyunhui"
+               ReferencedContainer = "container:iOS_lingyunhui.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+      </BuildActionEntries>
    </BuildAction>
    <TestAction
       buildConfiguration = "Debug"
@@ -12,7 +28,36 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "6018C8881CF8433400C085A5"
+               BuildableName = "iOS_lingyunhuiTests.xctest"
+               BlueprintName = "iOS_lingyunhuiTests"
+               ReferencedContainer = "container:iOS_lingyunhui.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "6018C8931CF8433400C085A5"
+               BuildableName = "iOS_lingyunhuiUITests.xctest"
+               BlueprintName = "iOS_lingyunhuiUITests"
+               ReferencedContainer = "container:iOS_lingyunhui.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "6018C86F1CF8433400C085A5"
+            BuildableName = "iOS_lingyunhui.app"
+            BlueprintName = "iOS_lingyunhui"
+            ReferencedContainer = "container:iOS_lingyunhui.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
       <AdditionalOptions>
       </AdditionalOptions>
    </TestAction>
@@ -26,6 +71,16 @@
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "6018C86F1CF8433400C085A5"
+            BuildableName = "iOS_lingyunhui.app"
+            BlueprintName = "iOS_lingyunhui"
+            ReferencedContainer = "container:iOS_lingyunhui.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>
@@ -35,6 +90,16 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "6018C86F1CF8433400C085A5"
+            BuildableName = "iOS_lingyunhui.app"
+            BlueprintName = "iOS_lingyunhui"
+            ReferencedContainer = "container:iOS_lingyunhui.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">
