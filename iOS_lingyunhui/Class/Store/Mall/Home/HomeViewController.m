@@ -1,4 +1,4 @@
-//
+
 //  HomeViewController.m
 //  HuoBanMallBuy
 //
@@ -7,22 +7,33 @@
 //
 
 #import "HomeViewController.h"
-#import "MallPayModel.h"
-#import "NewShareModel.h"
+#import <BlocksKit+UIKit.h>
+#import <MJRefresh.h>
+#import "UIViewController+NAV.h"
+#import "MJExtension.h"
 #import "PushWebViewController.h"
+#import <ShareSDK/ShareSDK.h>
+#import <ShareSDKUI/ShareSDK+SSUI.h>
+#import "NSDictionary+HuoBanMallSign.h"
+#import "AppDelegate.h"
+#import "MidTabelViewCell.h"
+#import "UIViewController+MonitorNetWork.h"
+#import "PayModel.h"
+#import <SDWebImageManager.h>
 #import "WXApi.h"
 #import "payRequsestHandler.h"
-#import "NSDictionary+HuoBanMallSign.h"
-#import "LoginController.h"
-#import <BlocksKit/BlocksKit.h>
-#import <BlocksKit/UIBarButtonItem+BlocksKit.h>
+#import "UserLoginTool.h"
+#import <SVProgressHUD.h>
+#import "UserInfo.h"
+#import "MallPayModel.h"
+#import "AppConfig.h"
 
-@interface HomeViewController()<UIWebViewDelegate,UIActionSheetDelegate,NJKWebViewProgressDelegate>
+@interface HomeViewController()<UIWebViewDelegate,UITableViewDataSource,UITableViewDelegate,UIActionSheetDelegate,WKUIDelegate,WKNavigationDelegate>
 
-@property (weak, nonatomic) IBOutlet UIWebView *homeWebView;
+@property (strong, nonatomic) WKWebView *homeWebView;
 
 
-@property (weak, nonatomic) IBOutlet UIWebView *homeBottonWebView;
+@property (strong, nonatomic) UIWebView *homeBottonWebView;
 
 /***/
 @property(nonatomic,strong) NSMutableString * debugInfo;
@@ -45,15 +56,8 @@
 /**分享按钮*/
 @property (nonatomic,strong) UIButton * shareBtn;
 
-
-/**账号提升选秀*/
-@property (nonatomic,strong) UITableView * midtableView;
-
 /**登陆后的背景遮罩*/
 @property (nonatomic,strong) UIView * backView;
-
-/**本地账号*/
-@property (nonatomic,strong) NSArray * LocalAccounts;
 
 @property(nonatomic,strong) NSString * orderNo;       //订单号
 @property(nonatomic,strong) NSString * priceNumber;  //订单价格
@@ -61,11 +65,13 @@
 /**支付的url*/
 @property(nonatomic,strong) NSString * ServerPayUrl;
 
-@property(nonatomic,strong) MallPayModel * paymodel;
+@property(nonatomic,strong) PayModel * paymodel;
 
-@property(nonatomic,strong) MJRefreshNormalHeader * header;
-@property (nonatomic, strong) NJKWebViewProgressView * webViewProgressView;
-@property (nonatomic, strong) NJKWebViewProgress *webViewProgress;
+@property (strong, nonatomic) UIProgressView *progressView;
+
+@property (nonatomic, assign) BOOL bingWeixin;
+
+@property (nonatomic, strong) NSString *bingWeixinUrl;
 
 @end
 
@@ -80,6 +86,7 @@
         _debugInfo = [NSMutableString string];
     }
     return _debugInfo;
+
 }
 
 
@@ -100,33 +107,23 @@
         _leftOption = [[UIButton alloc] init];
         _leftOption.frame = CGRectMake(0, 0, 25, 25);
         [_leftOption addTarget:self action:@selector(GoToLeft) forControlEvents:UIControlEventTouchUpInside];
-        [_leftOption setBackgroundImage:[UIImage imageNamed:@"gb"] forState:UIControlStateNormal];
+        [_leftOption setBackgroundImage:[UIImage imageNamed:@"main_title_left_sideslip"] forState:UIControlStateNormal];
         self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:_leftOption];
     }
     return _leftOption;
 }
 
 
-- (void)GoToLeft{
-    
-//    [self.navigationController popToRootViewControllerAnimated:YES];
-    
-//    [[NSNotificationCenter defaultCenter] postNotificationName:CannelLoginFailure object:nil];
-//    [self dismissViewControllerAnimated:YES completion:^{
-//        
-//    }];
-    
+- (UIButton *)shareBtn{
+    if (_shareBtn == nil) {
+        _shareBtn = [[UIButton alloc] init];
+        _shareBtn.frame = CGRectMake(0, 0, 25, 25);
+        _shareBtn.userInteractionEnabled = NO;
+        [_shareBtn addTarget:self action:@selector(shareBtnClicks) forControlEvents:UIControlEventTouchUpInside];
+        [_shareBtn setBackgroundImage:[UIImage imageNamed:@"home_title_right_share"] forState:UIControlStateNormal];
+    }
+    return _shareBtn;
 }
-
-//- (UIButton *)shareBtn{
-//    if (_shareBtn == nil) {
-//        _shareBtn = [[UIButton alloc] init];
-//        _shareBtn.frame = CGRectMake(0, 0, 25, 25);
-//        [_shareBtn addTarget:self action:@selector(shareBtnClicks) forControlEvents:UIControlEventTouchUpInside];
-//        [_shareBtn setBackgroundImage:[UIImage imageNamed:@"home_title_right_share"] forState:UIControlStateNormal];
-//    }
-//    return _shareBtn;
-//}
 
 
 -(UIButton *)refreshBtn{
@@ -165,141 +162,161 @@
  */
 - (NSString *) toCutew:(NSString *)urs{
     
-    NSString * gduid = [[NSUserDefaults standardUserDefaults] objectForKey:@"unionid"];
+    NSString * gduid = [[NSUserDefaults standardUserDefaults] objectForKey:LYHUserId];
+    
     NSRange rang = [urs rangeOfString:@"?"];
-    NSString * back = [urs substringFromIndex:rang.location + 1];
-    NSArray * aa =  [back componentsSeparatedByString:@"&"];
-    __block NSMutableArray * todelete = [NSMutableArray arrayWithArray:aa];
-    NSArray * key = @[@"unionid",@"appid",@"sign"];
-    [aa enumerateObjectsUsingBlock:^(NSString * obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        [key enumerateObjectsUsingBlock:^(NSString * key, NSUInteger idx, BOOL * _Nonnull stop) {
-            if ([obj containsString:key]) {
-                [todelete removeObject:obj];
-            }
-        }];
-    }];
-    NSMutableString * cc = [[NSMutableString alloc] init];
-    [todelete enumerateObjectsUsingBlock:^(NSString * obj, NSUInteger idx, BOOL *  stop) {
+    
+    if (rang.location != NSNotFound) {
+        NSString * back = [urs substringFromIndex:rang.location + 1];
         
-        [cc appendFormat:@"%@&",obj];
-    }];
-    [cc appendFormat:@"gduid=%@",gduid];
-    NSString * ee = [urs substringToIndex:rang.location+1];
-    NSString * dd = [NSString stringWithFormat:@"%@%@",ee,cc];
-    return dd;
+        NSArray * aa =  [back componentsSeparatedByString:@"&"];
+        
+        __block NSMutableArray * todelete = [NSMutableArray arrayWithArray:aa];
+        
+        NSArray * key = @[@"unionid",@"appid",@"sign"];
+        [aa enumerateObjectsUsingBlock:^(NSString * obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            [key enumerateObjectsUsingBlock:^(NSString * key, NSUInteger idx, BOOL * _Nonnull stop) {
+                if ([obj containsString:key]) {
+                    [todelete removeObject:obj];
+                }
+            }];
+        }];
+        
+        NSMutableString * cc = [[NSMutableString alloc] init];
+        [todelete enumerateObjectsUsingBlock:^(NSString * obj, NSUInteger idx, BOOL *  stop) {
+            
+            [cc appendFormat:@"%@&",obj];
+        }];
+        [cc appendFormat:@"gduid=%@",gduid];
+        
+        NSString * ee = [urs substringToIndex:rang.location+1];
+        
+        NSString * dd = [NSString stringWithFormat:@"%@%@",ee,cc];
+        
+        
+        return dd;
+    }else {
+        return urs;
+    }
+    
 }
 
 - (void)shareSdkSha{
-    if(self.homeWebView.isLoading){
-        [SVProgressHUD showErrorWithStatus:@"商城加载中.."];
-        return;
-    }
     
-//    NSString * urs =  self.homeWebView.request.URL.absoluteString;
-//    NewShareModel * newshare= [[NewShareModel alloc] init];
-//    newshare.taskInfo = urs;
-//    newshare.taskName = @"万事利商城";
-//#warning luohaibo
-//    newshare.taskSmallImgUrl = nil;
-//    [UserLoginTool LoginToShareMessageByShareSdk:newshare success:^(int json) {
-//        LWLog(@"%d",json);
-//    } failure:^(id error) {
-//    
-//    }];
+    //1、创建分享参数
+#pragma mark 分享修改
+    
+    [self.homeWebView evaluateJavaScript:@"__getShareStr()" completionHandler:^(id _Nullable shareStr, NSError * _Nullable error) {
+        
+        NSString *str = shareStr;
+        
+        NSArray *array = [str componentsSeparatedByString:@"^"];
+        if (array.count != 4) {
+            return;
+        }
+        NSString *temp = [self toCutew:array[2]];
+        
+        //1、创建分享参数
+        NSArray* imageArray = @[[NSURL URLWithString:array[3]]];
+        if (imageArray) {
+            NSMutableDictionary *shareParams = [NSMutableDictionary dictionary];
+            [shareParams SSDKSetupShareParamsByText:array[1]
+                                             images:imageArray
+                                                url:[NSURL URLWithString:temp]
+                                              title:array[0]
+                                               type:SSDKContentTypeAuto];
+            //2、分享（可以弹出我们的分享菜单和编辑界面）
+            [ShareSDK showShareActionSheet:nil //要显示菜单的视图, iPad版中此参数作为弹出菜单的参照视图，只有传这个才可以弹出我们的分享菜单，可以传分享的按钮对象或者自己创建小的view 对象，iPhone可以传nil不会影响
+                                     items:nil
+                               shareParams:shareParams
+                       onShareStateChanged:^(SSDKResponseState state, SSDKPlatformType platformType, NSDictionary *userData, SSDKContentEntity *contentEntity, NSError *error, BOOL end) {
+                           
+                           switch (state) {
+                               case SSDKResponseStateSuccess:
+                               {
+                                   UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"分享成功"
+                                                                                       message:nil
+                                                                                      delegate:nil
+                                                                             cancelButtonTitle:@"确定"
+                                                                             otherButtonTitles:nil];
+                                   [alertView show];
+                                   break;
+                               }
+                               case SSDKResponseStateFail:
+                               {
+                                   UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"分享失败"
+                                                                                   message:[NSString stringWithFormat:@"%@",error]
+                                                                                  delegate:nil
+                                                                         cancelButtonTitle:@"OK"
+                                                                         otherButtonTitles:nil, nil];
+                                   [alert show];
+                                   break;
+                               }
+                               default:
+                                   break;
+                           }
+                           
+                       }];
+            
+        }
+    }];
     
 }
-//
-//- (void)SelectMoreAccount{
-//    
-//    NSArray *array =  NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-//    NSString * filename = [[array objectAtIndex:0] stringByAppendingPathComponent:MallUesrList];
-//    NSData *data = [NSData dataWithContentsOfFile:filename];
-//    // 2.创建反归档对象
-//    NSKeyedUnarchiver *unArchiver = [[NSKeyedUnarchiver alloc] initForReadingWithData:data];
-//    // 3.解码并存到数组中
-//    NSArray *namesArray = [unArchiver decodeObjectForKey:MallUesrList];
-//    if (namesArray.count) {
-//        
-//        LWLog(@"namesArray.count");
-//    }
-//    LWLog(@"namesArray.count");
-//}
+
 
 - (void)viewDidLoad{
     [super viewDidLoad];
+//    WKWebsiteDataRecord *rec = [
+    [SVProgressHUD setDefaultMaskType:SVProgressHUDMaskTypeBlack];
     
-    self.automaticallyAdjustsScrollViewInsets = NO;
-//    [self SelectMoreAccount];
-    _webViewProgress = [[NJKWebViewProgress alloc] init];
-    _webViewProgress.webViewProxyDelegate = self;
-    _webViewProgress.progressDelegate = self;
-    CGRect navBounds = self.navigationController.navigationBar.bounds;
-    CGRect barFrame = CGRectMake(0,
-                                 navBounds.size.height - 2,
-                                 navBounds.size.width,
-                                 2);
-    _webViewProgressView = [[NJKWebViewProgressView alloc] initWithFrame:barFrame];
-    _webViewProgressView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin;
-    [_webViewProgressView setProgress:0 animated:YES];
-    [self.navigationController.navigationBar addSubview:_webViewProgressView];
-    
-    NSURL * urlStr = [NSURL URLWithString:self.homeUrl];
-    NSURLRequest * req = [[NSURLRequest alloc] initWithURL:urlStr];
-    
-    self.homeWebView.scalesPageToFit = YES;
+    AppDelegate *app = (AppDelegate *)[UIApplication sharedApplication].delegate;
+    self.homeWebView = [[WKWebView alloc] initWithFrame:CGRectMake(0, 0, ScreenWidth, ScreenHeight - 50)];
+    self.homeWebView.navigationDelegate = self;
+    self.homeWebView.UIDelegate = self;
     self.homeWebView.tag = 100;
-    self.homeWebView.delegate = _webViewProgress;
-//    self.homeWebView.scrollView.bounces = NO;
-    [self.homeWebView loadRequest:req];
+    self.homeWebView.customUserAgent = app.userAgent;
+//    self.homeWebView
+    [self.homeWebView loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:self.HomeWebUrl]]];
+    [self.view addSubview:self.homeWebView];
     
-    
-    
-    NSURLRequest * Bottomreq = [[NSURLRequest alloc] initWithURL:[NSURL URLWithString:_buttomUrl]];
-//    self.homeBottonWebView.scalesPageToFit = YES;
-    self.homeBottonWebView.delegate = self;
+    self.homeBottonWebView = [[UIWebView alloc] initWithFrame:CGRectMake(0, _homeWebView.frame.size.height, ScreenWidth, 50)];
     self.homeBottonWebView.tag = 20;
-//    self.homeBottonWebView.hidden = YES;
-    self.homeBottonWebView.backgroundColor = [UIColor blueColor];
-    self.homeBottonWebView.scrollView.bounces = NO;
-    self.homeBottonWebView.scrollView.scrollEnabled = NO;
-    [self.homeBottonWebView loadRequest:Bottomreq];
-    
+    self.homeBottonWebView.delegate = self;
+    [self.homeBottonWebView loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:self.HomeButtomUrl]]];
+    [self.view addSubview:self.homeBottonWebView];
 
+    
+    self.navigationController.navigationBar.alpha = 0;
+    self.navigationController.navigationBar.barTintColor = HuoBanMallBuyNavColor;
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:self.leftOption];
+    
     //集成刷新控件
     [self AddMjRefresh];
+    self.shareBtn.hidden = YES;
     
     self.navigationItem.rightBarButtonItems = @[[[UIBarButtonItem alloc] initWithCustomView:self.shareBtn]];
     
-    [self.homeWebView layoutIfNeeded];
-    [self.homeBottonWebView layoutIfNeeded];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(resetHomeWebAgent) name:ResetAllWebAgent object:nil];
     
+    [UIViewController MonitorNetWork];
     
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(loginSuccessAndReloadWeb) name:LoginFromMallNot object:nil];
-    
-    
-//    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:_leftOption];
-    UIImage *image = [UIImage imageNamed:@"gb"];
-    image = [image imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
-    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] bk_initWithImage:image style:UIBarButtonItemStylePlain handler:^(id sender) {
-        [self GoToLeft];
-    }];
+    [self initWebViewProgress];
 }
 
 
 
 - (void)AddMjRefresh{
-
-//    // 添加下拉刷新控件
+    // 添加下拉刷新控件
     MJRefreshNormalHeader * header = [MJRefreshNormalHeader headerWithRefreshingTarget:self refreshingAction:@selector(loadNewData)];
     // 隐藏时间
     header.lastUpdatedTimeLabel.hidden = YES;
     // 隐藏状态
     header.stateLabel.hidden = YES;
     header.arrowView.image= nil;
-    _header = header;
     self.homeWebView.scrollView.mj_header = header;
 
 }
+
 
 
 
@@ -310,21 +327,21 @@
     [self.homeWebView reload];
 }
 
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [self.navigationController.navigationBar addSubview:_progressView];
+    
+    [self.homeWebView loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:_HomeWebUrl]]];
+    [self.homeBottonWebView loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:_HomeButtomUrl]]];
+}
+
 - (void)viewDidAppear:(BOOL)animated{
     [super viewDidAppear:animated];
     
     [self.navigationController setNavigationBarHidden:NO animated:YES];
     
-//    [self.navigationController.navigationBar setBarTintColor:COLOR_NAVBAR_A];
-    
-    
-    self.tabBarController.tabBar.hidden = YES;
-    
-    [self.homeBottonWebView layoutIfNeeded];
-    [self.homeWebView layoutIfNeeded];
 }
-
-
 
 
 /**
@@ -336,14 +353,13 @@
     }
 }
 
-
-- (void)LeftbackToHome:(NSNotification *) note{
+- (void)GoToLeft {
     
-    NSString * backUrl = [note.userInfo objectForKey:@"url"];
-    NSURL * newUrl = [NSURL URLWithString:backUrl];
-    NSURLRequest * req = [[NSURLRequest alloc] initWithURL:newUrl];
-    [self.homeWebView loadRequest:req];
+    [[NSNotificationCenter defaultCenter] postNotificationName:CannelLoginFailure object:nil];
+    
+    [self dismissViewControllerAnimated:YES completion:nil];
 }
+
 
 - (UIView *)ReturnNavPictureWithName:(NSString *)name andTwo:(NSString *)share{
  
@@ -364,166 +380,12 @@
     return leftbutton;
 }
 
-- (void)presentLeftMenuViewController:(UIButton *)item{
-    
-    [self.navigationController popToRootViewControllerAnimated:YES];
-}
 
-
-- (void)webViewDidFinishLoad:(UIWebView *)webView{
-    
-    if (webView.tag == 100) {
-        self.title = [webView stringByEvaluatingJavaScriptFromString:@"document.title"];
-        if (_showBackArrows) {//返回按钮
-            [UIView animateWithDuration:0.05 animations:^{
-                self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:self.leftOption];
-            }];
-        }else{
-            [UIView animateWithDuration:0.05 animations:^{
-                self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:self.backArrow];
-            }];
-        }
-    }
-    
-    [self.homeWebView.scrollView.mj_header endRefreshing];
-}
-
-
-
-- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType{
-    
-    
-    LWLog(@"%ld",(long)webView.tag);
-    NSString *url = request.URL.absoluteString;
-    LWLog(@"%@",url);
-    if ([url isEqualToString:@"about:blank"]) {
-        return NO;
-    }
-    if (webView.tag == 100) {
-        if ([url rangeOfString:@"/UserCenter/Login.aspx"].location !=  NSNotFound) {
-            LoginController *login = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"LoginController"];
-//            login.isFromMall = YES;
-            UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:login];
-            [self presentViewController:nav animated:YES completion:nil];
-            return NO;
-            
-        }else if([url rangeOfString:@"AppAlipay.aspx"].location != NSNotFound){
-                self.ServerPayUrl = [url copy];
-                NSRange trade_no = [url rangeOfString:@"trade_no="];
-                NSRange customerID = [url rangeOfString:@"customerID="];
-                //            NSRange paymentType = [url rangeOfString:@"paymentType="];
-                NSRange trade_noRange = {trade_no.location + 9,customerID.location-trade_no.location-10};
-                NSString * trade_noss = [url substringWithRange:trade_noRange];//订单号
-                self.orderNo = trade_noss;
-                //            NSString * payType = [url substringFromIndex:paymentType.location+paymentType.length];
-                // 1.得到data
-                NSArray *array =  NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-                NSString * filename = [[array objectAtIndex:0] stringByAppendingPathComponent:PayTypeflat];
-                NSData *data = [NSData dataWithContentsOfFile:filename];
-                // 2.创建反归档对象
-                NSKeyedUnarchiver *unArchiver = [[NSKeyedUnarchiver alloc] initForReadingWithData:data];
-                // 3.解码并存到数组中
-                NSArray *namesArray = [unArchiver decodeObjectForKey:PayTypeflat];
-                NSMutableString * url = [NSMutableString stringWithString:[[NSUserDefaults standardUserDefaults] objectForKey:WebSit]];
-                [url appendFormat:@"%@?orderid=%@",@"/order/GetOrderInfo",trade_noss];
-                NSString * to = [NSDictionary ToSignUrlWithString:url];
-                [UserLoginTool ordorRequestGet:to parame:nil success:^(id json) {
-                    LWLog(@"%@", json);
-                    if ([json[@"code"] integerValue] == 200) {
-                        self.priceNumber = json[@"data"][@"Final_Amount"];
-                        NSString * des =  json[@"data"][@"ToStr"]; //商品描述
-                        self.proDes = des;
-                        if(namesArray.count == 1){
-                            MallPayModel * pay =  namesArray.firstObject;  //300微信  400支付宝
-                            self.paymodel = pay;
-                            if ([pay.payType integerValue] == 300) {//300微信
-                                UIActionSheet * aa =  [[UIActionSheet alloc] initWithTitle:@"支付方式" delegate:self cancelButtonTitle:@"取消" destructiveButtonTitle:nil otherButtonTitles:@"微信", nil];
-                                aa.tag = 500;//单个微信支付
-                                [aa showInView:self.view];
-                            }
-                            if ([pay.payType integerValue] == 400) {//400支付宝
-                                UIActionSheet * aa =  [[UIActionSheet alloc] initWithTitle:@"支付方式" delegate:self cancelButtonTitle:@"取消" destructiveButtonTitle:nil otherButtonTitles:@"支付宝", nil];
-                                aa.tag = 700;//单个支付宝支付
-                                [aa showInView:self.view];
-                            }
-                        }else if(namesArray.count == 2){
-                            UIActionSheet * aa =  [[UIActionSheet alloc] initWithTitle:@"支付方式" delegate:self cancelButtonTitle:@"取消" destructiveButtonTitle:nil otherButtonTitles:@"支付宝",@"微信", nil];
-                            aa.tag = 900;//两个都有的支付
-                            [aa showInView:self.view];
-                        }
-                        
-                    }
-
-                } failure:^(NSError *error) {
-//                    NSLog(@"%@",error.description);
-                }];
-                return NO;
-         
-
-            
-        }else{
-            NSRange range = [url rangeOfString:@"__newframe"];
-            if (range.location != NSNotFound) {
-                UIStoryboard * mainStory = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
-                PushWebViewController * funWeb =  [mainStory instantiateViewControllerWithIdentifier:@"PushWebViewController"];
-                funWeb.funUrl = url;
-                [self.navigationController pushViewController:funWeb animated:YES];
-                return NO;
-            }else{
-                
-                NSRange range = [url rangeOfString:@"back"];
-                if (range.location != NSNotFound) {
-                    self.showBackArrows = YES;
-                }else{
-                    self.showBackArrows = NO;
-                }
-                return YES;
-            }
-            
-            
-        }
+- (void)ocappCallJspoc{
+    [self.homeWebView evaluateJavaScript:@"alert(1);" completionHandler:^(id _Nullable tempStr, NSError * _Nullable error) {
         
-        
-    }else if(webView.tag == 20){
-//        InitModel * ini = (InitModel * )[UserLoginTool LoginReadModelDateFromCacheDateWithFileName:InitModelCaches];
-//        NSString * uraaaaa = [[NSUserDefaults standardUserDefaults] objectForKey:WebSit];
-//        NSString * cc = [NSString stringWithFormat:@"%@%@%@",uraaaaa,@"/bottom.aspx?customerid=",ini.customerId];
-        if ([url isEqualToString:self.buttomUrl]) {
-            return YES;
-        }else if([url rangeOfString:@"http://wpa.qq.com/msgrd?v=3&uin"].location != NSNotFound){
-            if ([[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:url]]) {
-                [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]]; //拨号
-            }else{
-                [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"itms-apps://ax.itunes.apple.com/cn/app/qq/id451108668?mt=12"]]; //拨号
-            }
-            return NO;
-        }else {
-
-            NSRange range = [url rangeOfString:@"back"];
-            NSString * newUrls = nil;
-            if (range.location != NSNotFound) {
-                
-                newUrls = [url stringByReplacingCharactersInRange:range withString:@"back=1"];
-            }else{
-                newUrls = [NSString stringWithFormat:@"%@&back=1",url];
-            }
-           
-            NSRange ran = [newUrls rangeOfString:@"aspx"];
-            NSString * newUrl = nil;
-            if (ran.location != NSNotFound) {
-                NSRange cc = NSMakeRange(ran.location+ran.length, 1);
-                newUrl = [newUrls stringByReplacingCharactersInRange:cc withString:@"?"];
-            }
-//            NSString * dddd = [NSDictionary ToSignUrlWithString:newUrl];
-//            NSURL * urlStr = [NSURL URLWithString:dddd];
-            NSURLRequest * req = [[NSURLRequest alloc] initWithURL:[NSURL URLWithString:newUrl]];
-            [self.homeWebView loadRequest:req];
-            return NO;
-        }
-    }
-    return YES;
+    }];
 }
-
 
 - (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex{
     
@@ -550,8 +412,8 @@
         // 3.解码并存到数组中
         NSArray *namesArray = [unArchiver decodeObjectForKey:PayTypeflat];
         if (buttonIndex==0) {//支付宝
-            MallPayModel * paymodel =  namesArray[0];
-            MallPayModel *cc =  [paymodel.payType integerValue] == 400?namesArray[0]:namesArray[1];
+            PayModel * paymodel =  namesArray[0];
+            PayModel *cc =  [paymodel.payType integerValue] == 400?namesArray[0]:namesArray[1];
             if (cc.webPagePay) {//网页支付
                 NSRange parameRange = [self.ServerPayUrl rangeOfString:@"?"];
                 NSString * par = [self.ServerPayUrl substringFromIndex:(parameRange.location+parameRange.length)];
@@ -563,13 +425,16 @@
                     [dict addEntriesFromDictionary:dt];
                 }];
                 NSString * js = [NSString stringWithFormat:@"utils.Go2Payment(%@, %@, 1, false)",dict[@"customerID"],dict[@"trade_no"]];
-                [self.homeWebView stringByEvaluatingJavaScriptFromString:js];
+//                [self.homeWebView stringByEvaluatingJavaScriptFromString:js];
+                [self.homeWebView evaluateJavaScript:js completionHandler:^(id _Nullable js, NSError * _Nullable error) {
+                    
+                }];
             }else{
                 [self MallAliPay:cc];
             }
         }
         if (buttonIndex==1) {//微信
-            MallPayModel * paymodel =  namesArray[0];
+            PayModel * paymodel =  namesArray[0];
             if ([paymodel.payType integerValue] == 300) {
                 [self WeiChatPay:namesArray[0]];
             }else{
@@ -585,41 +450,7 @@
 /**
  *  商城支付宝支付
  */
-- (void)MallAliPay:(MallPayModel *)pay{
-
-//    NSString *privateKey = pay.appKey;
-//    // @"MIICdQIBADANBgkqhkiG9w0BAQEFAASCAl8wggJbAgEAAoGBAMCul0XS9X/cVMkmrSeaZXnSvrs/bK5EiZf3d3/lTwHx165wAX/UIz4AcZHbKkYKKzmZKrRsu3tLRKFuflooKSVmWxk2hmeMqRETPZ/t8rKf8UONZIpOlOXEmJ/rYwxhnMeVhbJJxsko2so/jc+XAPLyv0tsfoI/TsJuhaGQ569ZAgMBAAECgYAK4lHdOdtwS4vmiO7DC++rgAISJbUH6wsysGHpsZRS8cxTKDSNefg7ql6/9Hdg2XYznLlS08mLX2cTD2DHyvj38KtxLEhLP7MtgjFFeTJ5Ta1UuBRERcmy0xSLh2zayiSwGTM8Bwu7UD6LUSTGwrgRR2Gg4EDpSG08J5OCThKF4QJBAPOO6WKI/sEuoRDtcIJqtv58mc4RSmit/WszkvPlZrjNFDU6TrOEnPU0zi3f8scxpPxVYROBceGj362m+02G2I0CQQDKhlq4pIM2FLNoDP4mzEUyoXIwqn6vIsAv8n49Tr9QnBjCrKt8RiibhjSEvcYqM/1eocW0j2vUkqR17rNuVVz9AkBq+Z02gzdpwEJMPg3Jqnd/pViksuF8wtbo6/kimOKaTrEOg/KnVJrf9HaOnatzpDF0B0ghGhzb329SRWJhddXNAkAkjrgVmGyu+HGiGKZP7pOXHhl0u3H+vzEd9pHfEzXpoSO/EFgsKKXv3Pvh8jexKo1T5bPAchsu1gGl4B63jeUpAkBbgUalUpZWZ4Aii+Mfts+S2E5RooZfVFqVBIsK47hjcoqLw4JJenyjFu+Skl2jOQ8+I5y1Ggeg6fpBMr2rbVkf";
-//    
-//    Order *order = [[Order alloc] init];
-//    order.service = @"mobile.securitypay.pay";
-//    order.partner = pay.partnerId;
-//    order.inputCharset = @"utf-8";
-//    NSMutableString * urls = [NSMutableString stringWithString:MainUrl];
-//    [urls appendString:pay.notify];
-//    order.notifyURL = urls;
-//    order.tradeNO = self.orderNo;
-//    order.productName = self.proDes;;
-//    order.productDescription = self.proDes;;
-//    order.amount = [NSString stringWithFormat:@"%.2f",[self.priceNumber floatValue]];  //订单总金额，只能为整数，详见支付金额;
-//    order.paymentType = @"1";
-//    order.seller = pay.partnerId;
-//    //将商品信息拼接成字符串
-//    NSString *orderSpec = [order description];
-//    id<DataSigner> signer = CreateRSADataSigner(privateKey);
-//    NSString *signedString = [signer signString:orderSpec];
-//    
-//    NSString *path = [[NSBundle mainBundle] pathForResource:@"Info" ofType:@"plist"];
-//    NSDictionary *infoPlist =[NSDictionary dictionaryWithContentsOfFile:path];
-//    NSString * appScheme = [[[[infoPlist objectForKey:@"CFBundleURLTypes"] firstObject] objectForKey:@"CFBundleURLSchemes"] lastObject];
-//    
-//    //将签名成功字符串格式化为订单字符串,请严格按照该格式
-//    NSString *orderString = nil;
-//    if (signedString != nil) {
-//        orderString = [NSString stringWithFormat:@"%@&sign=\"%@\"&sign_type=\"%@\"",
-//                       orderSpec, signedString, @"RSA"];
-//        
-//        [[AlipaySDK defaultService] payOrder:orderString fromScheme:appScheme callback:nil];
-//    }
+- (void)MallAliPay:(PayModel *)pay{
     
 }
 
@@ -627,7 +458,7 @@
 /**
  *  微信支付
  */
-- (void)WeiChatPay:(MallPayModel *)model{
+- (void)WeiChatPay:(PayModel *)model{
     //获取到实际调起微信支付的参数后，在app端调起支付
     NSMutableDictionary *dict = [self PayByWeiXinParame:model];
     if(dict != nil){
@@ -643,7 +474,7 @@
         req.sign                = [dict objectForKey:@"sign"];
         [WXApi sendReq:req];
     }else{
-//        NSLog(@"提示信息----微信预支付失败");
+        NSLog(@"提示信息----微信预支付失败");
     }
 }
 
@@ -651,7 +482,7 @@
 /**
  *  微信支付预zhifu
  */
-- (NSMutableDictionary *)PayByWeiXinParame:(MallPayModel *)paymodel{
+- (NSMutableDictionary *)PayByWeiXinParame:(PayModel *)paymodel{
     
     payRequsestHandler * payManager = [[payRequsestHandler alloc] init];
     [payManager setKey:paymodel.appKey];
@@ -663,7 +494,7 @@
         params[@"mch_id"] = paymodel.partnerId;     //微信支付分配的商户号
         params[@"nonce_str"] = noncestr; //随机字符串，不长于32位。推荐随机数生成算法
         params[@"trade_type"] = @"APP";   //取值如下：JSAPI，NATIVE，APP，WAP,详细说明见参数规定
-        params[@"body"] = @"万事利商城";//MallName; //商品或支付单简要描述
+        params[@"body"] = MallName; //商品或支付单简要描述
         NSMutableString * urls = [[NSUserDefaults standardUserDefaults] objectForKey:WebSit];
         [urls appendString:paymodel.notify];
         params[@"notify_url"] = urls;  //接收微信支付异步通知回调地址
@@ -691,10 +522,10 @@
             package         = @"Sign=WXPay";
             //第二次签名参数列表
             NSMutableDictionary *signParams = [NSMutableDictionary dictionary];
-            [signParams setObject: paymodel.appId  forKey:@"appid"];
+            [signParams setObject: paymodel.appId   forKey:@"appid"];
             [signParams setObject: nonce_str    forKey:@"noncestr"];
             [signParams setObject: package      forKey:@"package"];
-            [signParams setObject: paymodel.partnerId   forKey:@"partnerid"];
+            [signParams setObject: @"1251040401"   forKey:@"partnerid"];
             [signParams setObject: time_stamp   forKey:@"timestamp"];
             [signParams setObject: prePayid     forKey:@"prepayid"];
             //生成签名
@@ -712,49 +543,260 @@
     return nil;
 }
 
-
-#pragma mark - NJKWebViewProgressDelegate
--(void)webViewProgress:(NJKWebViewProgress *)webViewProgress updateProgress:(float)progress
-{
-    [_webViewProgressView setProgress:progress animated:YES];
+- (void)dealloc{
+    
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [self.homeWebView removeObserver:self forKeyPath:@"estimatedProgress"];
 }
 
 
-#pragma mark - 如果没登录，登录成功后的操作 
+- (void)viewDidDisappear:(BOOL)animated {
+    [super viewDidDisappear:animated];
+    [_progressView removeFromSuperview];
+}
+#pragma mark UIWebView
 
-- (void)loginSuccessAndReloadWeb {
+- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType {
     
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:LoginFromMallNot object:nil];
-    
-    [UserLoginTool loginRequestGet:@"getMallLoginUrl" parame:nil success:^(id json) {
-        LWLog(@"%@", json);
-        if ([json[@"systemResultCode"] intValue] == 1 && [json[@"resultCode"] intValue] == 1) {
-            
+    NSString *temp = request.URL.absoluteString;
+    NSString *url = [temp lowercaseString];
 
-            self.homeUrl = json[@"resultData"][@"loginUrl"];
-            self.buttomUrl = json[@"resultData"][@"bottomNavUrl"];
+    
+    if ([temp isEqualToString:self.HomeButtomUrl]) {
+        return YES;
+    }else if([url rangeOfString:@"http://wpa.qq.com/msgrd?v=3&uin"].location != NSNotFound){
+        if ([[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:url]]) {
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]]; //拨号
+        }else{
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"itms-apps://ax.itunes.apple.com/cn/app/qq/id451108668?mt=12"]]; //拨号
+        }
+        return NO;
+    }else {
+        
+        NSRange range = [url rangeOfString:@"back"];
+        NSString * newUrls = nil;
+        if (range.location != NSNotFound) {
             
-            [[NSUserDefaults standardUserDefaults] setObject:json[@"resultData"][@"orderRequestUrl"] forKey:WebSit];
+            newUrls = [url stringByReplacingCharactersInRange:range withString:@"back=1"];
+        }else{
+            newUrls = [NSString stringWithFormat:@"%@?back=1",url];
+        }
+        
+//        NSRange ran = [newUrls rangeOfString:@"aspx"];
+////        NSString * newUrl = nil;
+//        if (ran.location != NSNotFound) {
+//            NSRange cc = NSMakeRange(ran.location+ran.length, 1);
+//            newUrl = [newUrls stringByReplacingCharactersInRange:cc withString:@"?"];
+//        }
+//        NSString * dddd = [NSDictionary ToSignUrlWithString:newUrl];
+//        NSURL * urlStr = [NSURL URLWithString:dddd];
+        NSURLRequest * req = [[NSURLRequest alloc] initWithURL:[NSURL URLWithString:newUrls]];
+        [self.homeWebView loadRequest:req];
+        return NO;
+    }
+    return YES;
+}
+
+#pragma mark wkWebView
+
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationResponse:(WKNavigationResponse *)navigationResponse decisionHandler:(void (^)(WKNavigationResponsePolicy))decisionHandler{
+    
+    
+   
+    NSString *temp = webView.URL.absoluteString;
+    NSString *url = [temp lowercaseString];
+    if ([url isEqualToString:@"about:blank"]) {
+        decisionHandler(WKNavigationResponsePolicyCancel);
+    }
+    if (webView.tag == 100) {
+        if ([url rangeOfString:@"qq"].location !=  NSNotFound) {
+            decisionHandler(WKNavigationResponsePolicyAllow);
+        }
+        if ([url rangeOfString:@"appalipay.aspx"].location != NSNotFound){
+            self.ServerPayUrl = [url copy];
+            NSRange trade_no = [url rangeOfString:@"trade_no="];
+            NSRange customerID = [url rangeOfString:@"customerID="];
+            //            NSRange paymentType = [url rangeOfString:@"paymentType="];
+            NSRange trade_noRange = {trade_no.location + 9,customerID.location-trade_no.location-10};
+            NSString * trade_noss = [url substringWithRange:trade_noRange];//订单号
+            self.orderNo = trade_noss;
+            //            NSString * payType = [url substringFromIndex:paymentType.location+paymentType.length];
+            // 1.得到data
+            NSArray *array =  NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+            NSString * filename = [[array objectAtIndex:0] stringByAppendingPathComponent:PayTypeflat];
+            NSData *data = [NSData dataWithContentsOfFile:filename];
+            // 2.创建反归档对象
+            NSKeyedUnarchiver *unArchiver = [[NSKeyedUnarchiver alloc] initForReadingWithData:data];
+            // 3.解码并存到数组中
+            NSArray *namesArray = [unArchiver decodeObjectForKey:PayTypeflat];
+            NSMutableString * url = [NSMutableString stringWithString:[[NSUserDefaults standardUserDefaults] objectForKey:WebSit]];
+            [url appendFormat:@"%@?orderid=%@",@"/order/GetOrderInfo",trade_noss];
+            NSString * to = [NSDictionary ToSignUrlWithString:url];
+            [UserLoginTool ordorRequestGet:to parame:nil success:^(id json) {
+                LWLog(@"%@", json);
+                if ([json[@"code"] integerValue] == 200) {
+                    self.priceNumber = json[@"data"][@"Final_Amount"];
+                    NSString * des =  json[@"data"][@"ToStr"]; //商品描述
+                    self.proDes = des;
+                    if(namesArray.count == 1){
+                        MallPayModel * pay =  namesArray.firstObject;  //300微信  400支付宝
+                        self.paymodel = pay;
+                        if ([pay.payType integerValue] == 300) {//300微信
+                            UIActionSheet * aa =  [[UIActionSheet alloc] initWithTitle:@"支付方式" delegate:self cancelButtonTitle:@"取消" destructiveButtonTitle:nil otherButtonTitles:@"微信", nil];
+                            aa.tag = 500;//单个微信支付
+                            [aa showInView:self.view];
+                        }
+                        if ([pay.payType integerValue] == 400) {//400支付宝
+                            UIActionSheet * aa =  [[UIActionSheet alloc] initWithTitle:@"支付方式" delegate:self cancelButtonTitle:@"取消" destructiveButtonTitle:nil otherButtonTitles:@"支付宝", nil];
+                            aa.tag = 700;//单个支付宝支付
+                            [aa showInView:self.view];
+                        }
+                    }else if(namesArray.count == 2){
+                        UIActionSheet * aa =  [[UIActionSheet alloc] initWithTitle:@"支付方式" delegate:self cancelButtonTitle:@"取消" destructiveButtonTitle:nil otherButtonTitles:@"支付宝",@"微信", nil];
+                        aa.tag = 900;//两个都有的支付
+                        [aa showInView:self.view];
+                    }
+                    
+                }
+                
+            } failure:^(NSError *error) {
+                
+            }];
+            decisionHandler(WKNavigationResponsePolicyCancel);
             
-            [self reloadWeb];
+            
+            
+        }else{
+            
+            NSRange range = [url rangeOfString:@"__newframe"];
+            if (range.location != NSNotFound) {
+                UIStoryboard * mainStory = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+                PushWebViewController * funWeb =  [mainStory instantiateViewControllerWithIdentifier:@"PushWebViewController"];
+                funWeb.funUrl = url;
+                [self.navigationController pushViewController:funWeb animated:YES];
+                decisionHandler(WKNavigationResponsePolicyCancel);
+            }else{
+                
+                NSRange range = [url rangeOfString:@"back"];
+                if (range.location != NSNotFound) {
+                    self.showBackArrows = YES;
+                }else{
+                    if ([temp isEqualToString:self.HomeWebUrl]) {
+                        self.showBackArrows = YES;
+                    }
+                    self.showBackArrows = NO;
+                }
+                decisionHandler(WKNavigationResponsePolicyAllow);
+            }
+            
             
         }
-    } failure:^(NSError *error) {
-        LWLog(@"%@", error);
-    }];
+        
+        decisionHandler(WKNavigationResponsePolicyAllow);
+    }
     
 }
 
-- (void)reloadWeb {
+- (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
     
-    NSURL * urlStr = [NSURL URLWithString:self.homeUrl];
-    NSURLRequest * req = [[NSURLRequest alloc] initWithURL:urlStr];
-    [self.homeWebView loadRequest:req];
+    [_refreshBtn setBackgroundImage:[UIImage imageNamed:@"main_title_left_refresh"] forState:UIControlStateNormal];
     
-    NSURLRequest * Bottomreq = [[NSURLRequest alloc] initWithURL:[NSURL URLWithString:_buttomUrl]];
-    [self.homeBottonWebView loadRequest:Bottomreq];
+    self.refreshBtn.userInteractionEnabled = YES;
+    
+    
+    if (webView.tag == 100) {
+        
+        [webView evaluateJavaScript:@"document.title" completionHandler:^(id _Nullable title, NSError * _Nullable error) {
+            self.title = title;
+        }];
+        
+        if (_showBackArrows) {//返回按钮
+            
+            [UIView animateWithDuration:0.05 animations:^{
+                self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:self.leftOption];
+            }];
+        }else{
+            [UIView animateWithDuration:0.05 animations:^{
+                self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:self.backArrow];
+            }];
+        }
+        
+        [webView evaluateJavaScript:@"__getShareStr()" completionHandler:^(id _Nullable shareStr, NSError * _Nullable error) {
+            
+            NSString *str = shareStr;
+            if (str.length != 0) {
+                self.shareBtn.hidden = NO;
+            }else {
+                self.shareBtn.hidden = YES;
+            }
+        }];
+        
+    }
+    
+    _shareBtn.userInteractionEnabled = YES;
+    [self.homeWebView.scrollView.mj_header endRefreshing];
 }
 
+
+
+- (void)webView:(WKWebView *)webView didStartProvisionalNavigation:(null_unspecified WKNavigation *)navigation{
+    _shareBtn.userInteractionEnabled = NO;
+}
+
+- (void)webView:(WKWebView *)webView runJavaScriptAlertPanelWithMessage:(NSString *)message initiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(void))completionHandler{
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"提示" message:message?:@"" preferredStyle:UIAlertControllerStyleAlert];
+    [alertController addAction:([UIAlertAction actionWithTitle:@"确认" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        completionHandler();
+    }])];
+    [self presentViewController:alertController animated:YES completion:nil];
+    
+}
+
+- (void)webView:(WKWebView *)webView runJavaScriptConfirmPanelWithMessage:(nonnull NSString *)message initiatedByFrame:(nonnull WKFrameInfo *)frame completionHandler:(nonnull void (^)(BOOL))completionHandler {
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"提示" message:message?:@"" preferredStyle:UIAlertControllerStyleAlert];
+    [alertController addAction:([UIAlertAction actionWithTitle:@"确认" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        completionHandler(YES);
+    }])];
+    [alertController addAction:([UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        completionHandler(YES);
+    }])];    [self presentViewController:alertController animated:YES completion:nil];
+}
+
+
+- (void)resetHomeWebAgent {
+    AppDelegate *app = (AppDelegate *)[UIApplication sharedApplication].delegate;
+    self.homeWebView.customUserAgent = app.userAgent;
+}
+
+/**
+ *  初始化进度条
+ */
+- (void)initWebViewProgress {
+    
+    [self.homeWebView addObserver:self forKeyPath:@"estimatedProgress" options:NSKeyValueObservingOptionNew context:nil];
+    CGFloat progressBarHeight = 2.f;
+    CGRect navigationBarBounds = self.navigationController.navigationBar.bounds;
+    CGRect barFrame = CGRectMake(0, navigationBarBounds.size.height - progressBarHeight, navigationBarBounds.size.width, progressBarHeight);
+    self.progressView = [[UIProgressView alloc] initWithFrame:barFrame];
+    self.progressView.tintColor = [UIColor greenColor];
+    self.progressView.trackTintColor = HuoBanMallBuyNavColor;
+    
+    
+}
+
+// 计算wkWebView进度条
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
+    if (object == self.homeWebView && [keyPath isEqualToString:@"estimatedProgress"]) {
+        CGFloat newprogress = [[change objectForKey:NSKeyValueChangeNewKey] doubleValue];
+        if (newprogress == 1) {
+            self.progressView.hidden = YES;
+            [self.progressView setProgress:0 animated:NO];
+        }else {
+            self.progressView.hidden = NO;
+            [self.progressView setProgress:newprogress animated:YES];
+        }
+    }
+}
 
 @end
 

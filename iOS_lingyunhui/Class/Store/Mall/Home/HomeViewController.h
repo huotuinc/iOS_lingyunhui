@@ -10,10 +10,10 @@
 
 @interface HomeViewController : UIViewController
 
-@property (nonatomic, strong) NSString *homeUrl;
+- (void)resetHomeWebAgent;
 
-@property (nonatomic, strong) NSString *buttomUrl;
+@property (nonatomic, strong) NSString *HomeButtomUrl;
 
-@property (nonatomic, strong) NSString *ordorUrl;
+@property (nonatomic, strong) NSString *HomeWebUrl;
 
 @end

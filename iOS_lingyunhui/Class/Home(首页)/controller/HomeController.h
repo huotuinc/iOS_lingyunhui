@@ -9,6 +9,6 @@
 #import <UIKit/UIKit.h>
 
 @interface HomeController : UIViewController
-@property (strong, nonatomic)  UIWebView *webView;
+@property (strong, nonatomic)  WKWebView *webView;
 
 @end

@@ -30,11 +30,14 @@
     }];
     
     self.next.layer.cornerRadius = 5;
-    
-    if (self.isForget) {
-        self.title = @"忘记密码";
-    }else {
+    if (_isphoneLogin) {
         self.title = @"快速注册";
+    }
+    if (_isWeixinLogin) {
+        self.title = @"绑定手机号";
+    }
+    if (_isForget) {
+        self.title = @"忘记密码";
     }
     
     [self.phone becomeFirstResponder];
@@ -56,70 +59,28 @@
 
 - (void)getSecurtityCode {
     
-//    NSString *phoneNumber = self.phone.text;
-//    if ([phoneNumber isEqualToString:@""]) {
-//        [SVProgressHUD showErrorWithStatus:@"手机号不能为空"];
-//    }else if (![self checkTel:phoneNumber]) {
-//        [SVProgressHUD showErrorWithStatus:@"请输入正确的手机号"];
-//    }else {
-//    
-//        NSMutableDictionary *dic = [NSMutableDictionary dictionary];
-//        dic[@"phone"] = phoneNumber;
-//        dic[@"type"] = @1;
-//        dic[@"codeType"] = @0;
-//    
-//            [UserLoginTool loginRequestGet:@"sendSMS" parame:dic success:^(id json) {
-//        
-//                if ([json[@"systemResultCode"] intValue] == 1 && [json[@"resultCode"] intValue]==53014) {
-//            
-//                    [SVProgressHUD showErrorWithStatus:json[@"resultDescription"]];
-//                    return ;
-//                }else if ([json[@"systemResultCode"] intValue] == 1 && [json[@"resultCode"] intValue]==54001) {
-//            
-//                    [SVProgressHUD showErrorWithStatus:@"该账号已被注册"];
-//                    return ;
-//                }else if ([json[@"systemResultCode"] intValue] == 1 && [json[@"resultCode"] intValue]==55001){
-//                    
-//                    if ([json[@"resultData"][@"voiceAble"] intValue]) {
-//                        UIAlertView * a = [[UIAlertView alloc] initWithTitle:@"验证码提示" message:@"短信通到不稳定，是否尝试语言通道" delegate:self cancelButtonTitle:@"确定" otherButtonTitles:@"取消", nil];
-//                        [a show];
-//                    }
-//            
-//            
-//                }else if ([json[@"systemResultCode"] intValue] == 1 && [json[@"resultCode"] intValue]==1){
-//                    [self settime];
-//                }
-//        
-//            } failure:^(NSError *error) {
-//        
-//        }];
-//    }
-}
-
-
-- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex{
+    NSString *phoneNumber = self.phone.text;
+    if ([phoneNumber isEqualToString:@""]) {
+        [SVProgressHUD showErrorWithStatus:@"手机号不能为空"];
+    }else if (![self checkTel:phoneNumber]) {
+        [SVProgressHUD showErrorWithStatus:@"请输入正确的手机号"];
+    }else {
     
-    if (buttonIndex == 0) {
-        
-        //网络请求获取验证码
-        NSMutableDictionary * params = [NSMutableDictionary dictionary];
-        params[@"phone"] = self.phone.text;
-        params[@"type"] = @1;
-        params[@"codeType"] = @1;
-        
-        
-        [UserLoginTool loginRequestGet:@"sendSMS" parame:params success:^(NSDictionary * json) {
-            
-            if ([json[@"systemResultCode"] intValue] == 1 && [json[@"resultCode"] intValue]==1) {
-                
+        NSMutableDictionary *dic = [NSMutableDictionary dictionary];
+        dic[@"mobile"] = phoneNumber;
+        [UserLoginTool loginRequestPostWithFile:@"/ArvatoMessage/SendCode" parame:dic success:^(id json) {
+            LWLog(@"%@", json);
+            if ([json[@"code"] integerValue] == 200) {
+                [SVProgressHUD showSuccessWithStatus:@"验证码发送成功"];
+                [self settime];
             }
-            
         } failure:^(NSError *error) {
             
-
-        }];
+        } withFileKey:nil];
+        
     }
 }
+
 
 - (IBAction)goNext:(id)sender {
     
@@ -133,27 +94,22 @@
         return;
     }else {
         NSMutableDictionary *dic = [NSMutableDictionary dictionary];
-        dic[@"phone"] = self.phone.text;
-        dic[@"authcode"] = self.security.text;
-        dic[@"type"] = @1;
-        [UserLoginTool loginRequestPostWithFile:@"checkAuthCode" parame:dic success:^(id json) {
+        NSString *str = _security.text;
+        dic[@"mobile"] = self.phone.text;
+        dic[@"code"] = str;
+        [UserLoginTool loginRequestPostWithFile:@"/ArvatoMessage/VerifyCode" parame:dic success:^(id json) {
             
-            if ([json[@"systemResultCode"] intValue] == 1 && [json[@"resultCode"] intValue] ==  53007) {
-                
-                [SVProgressHUD showErrorWithStatus:[NSString stringWithFormat:@"%@", json[@"resultDescription"]]];
-                return ;
+            LWLog(@"%@", json);
+            if ([json[@"code"] integerValue] == 200) {
+                RegisterSecondController *second = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"RegisterSecondController"];
+                second.isForget = _isForget;
+                second.isWeixinLogin = _isWeixinLogin;
+                second.isphoneLogin = _isphoneLogin;
+                second.phone = self.phone.text;
+                second.goUrl = self.goUrl;
+                second.weixin = self.weixin;
+                [self.navigationController pushViewController:second animated:YES];
             }
-            
-            if ([json[@"systemResultCode"] intValue] == 1 && [json[@"resultCode"] intValue]==1) {
-                
-
-                
-                UIStoryboard *story = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
-                RegisterSecondController *next = [story instantiateViewControllerWithIdentifier:@"RegisterSecondController"];
-                next.phone = self.phone.text;
-                [self.navigationController pushViewController:next animated:YES];
-            }
-            
         } failure:^(NSError *error) {
             
         } withFileKey:nil];

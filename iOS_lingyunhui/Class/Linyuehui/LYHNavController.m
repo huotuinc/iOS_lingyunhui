@@ -16,7 +16,13 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
+    NSString * path = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
+    NSString *fileName = [path stringByAppendingPathComponent:ButtomBarItems];
+    BarItemMenus *bars = [NSKeyedUnarchiver unarchiveObjectWithFile:fileName];
+    if (bars) {
+        BarItem *bar = bars.bottomMenus[1];
+        self.tabBarItem.title = bar.name;
+    }
 }
 
 - (void)didReceiveMemoryWarning {

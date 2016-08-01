@@ -45,9 +45,12 @@
     
     for (int i = 0; i<fileName.count; i++) {
         NSString * cc = [fileName[i] copy];
-
+        LWLog(@"%@",cc);
         NSError * error = nil;
         
+        if ([cc isEqualToString:LYHAppConfig]||[cc isEqualToString:ButtomBarItems]) {
+            continue;
+        }
         
         [fileManager removeItemAtPath:[path stringByAppendingPathComponent:cc] error:&error];
         if (error) {
@@ -55,7 +58,7 @@
 
         }
     }
-    
+    [[NSUserDefaults standardUserDefaults] setObject:nil forKey:LYHUserId];
     [ShareSDK cancelAuthorize:SSDKPlatformTypeQQ];
     [ShareSDK cancelAuthorize:SSDKPlatformTypeWechat];
 }

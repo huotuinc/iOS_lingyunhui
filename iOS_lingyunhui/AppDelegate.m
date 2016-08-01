@@ -7,7 +7,6 @@
 //
 
 #import "AppDelegate.h"
-#import <BaiduMapAPI_Base/BMKMapManager.h>
 //微信SDK头文件
 #import "WXApi.h"
 
@@ -17,10 +16,13 @@
 #import <TencentOpenAPI/TencentOAuth.h>
 #import <TencentOpenAPI/QQApiInterface.h>
 
+#import <SVProgressHUD.h>
+#import "LWNewFeatureController.h"
+#import "HomeTabbarController.h"
 @interface AppDelegate ()
 
 
-@property (nonatomic, strong) BMKMapManager *mapManager;
+@property (nonatomic, strong) NSString *Agent;
 
 @end
 
@@ -30,16 +32,20 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
     
+    //初始化agent
+    UIWebView *webView = [[UIWebView alloc] initWithFrame:CGRectZero];
+    _Agent = [webView stringByEvaluatingJavaScriptFromString:@"navigator.userAgent"];
+    
+    self.window = [[UIWindow alloc] initWithFrame:CGRectMake(0, 0, ScreenWidth, ScreenHeight)];
+    self.window.backgroundColor = [UIColor whiteColor];
+    self.window.rootViewController = [[UIViewController alloc] init];
+    
     [self _initShare];
     
-    _mapManager = [[BMKMapManager alloc]init];
-    // 如果要关注网络及授权验证事件，请设定     generalDelegate参数
-    BOOL ret = [_mapManager start:@"9cTPjMpTArhDMXIQLPf9WoVbGfEiSuYr"  generalDelegate:nil];
-    if (!ret) {
-        NSLog(@"manager start failed!");
-    }
     
+    [self appGetConfig];
     
+    [SVProgressHUD setMinimumDismissTimeInterval:2];
     
     
     
@@ -102,6 +108,75 @@
      }];
 }
 
+- (void)appGetConfig {
+    
+    
+    
+    UserInfo *user = nil;
+    NSString * path = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
+    NSString *fileName = [path stringByAppendingPathComponent:UserInfoLYH];
+    user =  [NSKeyedUnarchiver unarchiveObjectWithFile:fileName];
+    
+    NSMutableDictionary *dic = [NSMutableDictionary dictionary];
+    NSString *userID = [[NSUserDefaults standardUserDefaults] objectForKey:LYHUserId];
+    NSString *tempUserId = [NSString stringWithFormat:@"%@", userID];
+    if (tempUserId.length == 0) {
+        dic[@"userId"] = @"";
+    }else {
+        dic[@"userId"] = userID;
+    }
+    if (user) {
+        if (user.unionId) {
+            dic[@"unionId"] = user.unionId;
+        }else {
+            dic[@"unionId"] = @"";
+        }
+        if (user.openId) {
+            dic[@"openId"] = user.openId;
+        }else {
+            dic[@"openId"] = @"";
+        }
+    }else {
+        dic[@"unionId"] = @"";
+        dic[@"openId"] = @"";
+    }
+    
+    [UserLoginTool loginRequestGet:@"/ArvatoConfig/GetArvatoConfig?" parame:dic success:^(id json) {
+        LWLog(@"%@",json);
+        if ([json[@"code"] integerValue] == 200) {
+            UserInfo *user = [UserInfo mj_objectWithKeyValues:json[@"data"][@"userInfo"]];
+            
+            NSString * path = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
+            NSString *fileName = [path stringByAppendingPathComponent:UserInfoLYH];
+            [NSKeyedArchiver archiveRootObject:user toFile:fileName];
+            [[NSUserDefaults standardUserDefaults] setObject:user.userId forKey:LYHUserId];
+            
+            if (![user.userId isEqualToNumber:@0]) {
+                
+            }else {
+                [[NSUserDefaults standardUserDefaults] setObject:Failure forKey:LoginStatus];
+            }
+            
+            [self resetUserAgent:nil];
+            
+            AppConfig *appConfig = [AppConfig mj_objectWithKeyValues:json[@"data"][@"appConfig"]];
+            NSString *fileConfig = [path stringByAppendingPathComponent:LYHAppConfig];
+            [NSKeyedArchiver archiveRootObject:appConfig toFile:fileConfig];
+            
+            [BarItemMenus mj_setupObjectClassInArray:^NSDictionary *{
+                return @{@"bottomMenus":@"BarItem"};
+            }];
+            BarItemMenus *meun = [BarItemMenus mj_objectWithKeyValues:json[@"data"]];
+            NSString *filemeun = [path stringByAppendingPathComponent:ButtomBarItems];
+            [NSKeyedArchiver archiveRootObject:meun toFile:filemeun];
+            
+            [self getConfigSuccsee];
+        }
+    } failure:^(NSError *error) {
+        LWLog(@"%@",error);
+    }];
+}
+
 - (void)applicationWillResignActive:(UIApplication *)application {
     // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
     // Use this method to pause ongoing tasks, disable timers, and throttle down OpenGL ES frame rates. Games should use this method to pause the game.
@@ -124,4 +199,91 @@
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
 }
 
+
+- (void)resetUserAgent:(NSString *) goUrl {
+    
+    
+    // Do any additional setup after loading the view, typically from a nib.
+    
+    
+    //add my info to the new agent
+    NSString *newAgent = nil;
+    UserInfo * usaa = nil;
+    
+    NSString * path = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
+    NSString *fileName = [path stringByAppendingPathComponent:UserInfoLYH];
+    usaa =  [NSKeyedUnarchiver unarchiveObjectWithFile:fileName];
+    
+    NSString *userID = [[NSUserDefaults standardUserDefaults] objectForKey:LYHUserId];
+    //    NSString *tempUserId = [(NSNumber*)userID  stringValue]
+    if ([NSString stringWithFormat:@"%@", userID].length == 0) {
+        userID = @"";
+    }
+    if (usaa) {
+        if (usaa.unionId) {
+        }else {
+            usaa.unionId = @"";
+        }
+        if (usaa.openId) {
+        }else {
+            usaa.openId= @"";
+        }
+    }else {
+        usaa = [[UserInfo alloc] init];
+        usaa.openId = @"";
+        usaa.unionId = @"";
+    }
+    
+    NSString *str = [MD5Encryption md5by32:[NSString stringWithFormat: @"%@%@%@%@",userID, usaa.unionId, usaa.openId, HTYMRSCREAT]];
+    
+    
+    newAgent = [_Agent stringByAppendingString:[NSString stringWithFormat: @";mobile;hottec:%@:%@:%@:%@;",str,userID, usaa.unionId, usaa.openId]];
+    
+    
+    self.userAgent = newAgent;
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:ResetAllWebAgent object:nil];
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        
+        if (goUrl) {
+            NSDictionary * objc = [NSDictionary dictionaryWithObject:goUrl forKey:@"url"];
+            [[NSNotificationCenter defaultCenter] postNotificationName:GoToNextWeb object:nil userInfo:objc];
+        }
+    });
+    
+}
+
+
+- (void)getConfigSuccsee {
+//    //版本新特性
+//    NSString * appVersion = [[NSUserDefaults standardUserDefaults] stringForKey:LocalAppVersion];
+//    if (appVersion) {
+//        
+//        if ([appVersion isEqualToString:AppVersion]) {//相等
+//            
+//            
+//        }else{//不相等
+//            [[NSUserDefaults standardUserDefaults] setObject:AppVersion forKey:LocalAppVersion];
+//            LWNewFeatureController *new = [[LWNewFeatureController alloc] init];
+//            self.window.rootViewController = new;
+//            [self.window makeKeyAndVisible];
+//        }
+//        
+//    }else{//没有版本号
+//        //
+//        [[NSUserDefaults standardUserDefaults] setObject:AppVersion forKey:LocalAppVersion];
+//        LWNewFeatureController *new = [[LWNewFeatureController alloc] init];
+//        self.window.rootViewController = new;
+//        [self.window makeKeyAndVisible];
+//    }
+    
+    
+    
+    UIStoryboard *stroy = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+    HomeTabbarController *tab = [stroy instantiateViewControllerWithIdentifier:@"HomeTabbarController"];
+    self.window.rootViewController = tab;
+    [self.window makeKeyAndVisible];
+
+}
 @end

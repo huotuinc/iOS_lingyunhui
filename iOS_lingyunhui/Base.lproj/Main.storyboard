@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="10117" systemVersion="15F34" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="XfR-Br-koE">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="10117" systemVersion="15G31" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
     <dependencies>
-        <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
         <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
         <capability name="Constraints with non-1.0 multipliers" minToolsVersion="5.1"/>
     </dependencies>
     <scenes>
-        <!--Tab Bar Controller-->
+        <!--Home Tabbar Controller-->
         <scene sceneID="4Mj-Z7-HCa">
             <objects>
-                <tabBarController id="XfR-Br-koE" sceneMemberID="viewController">
+                <tabBarController storyboardIdentifier="HomeTabbarController" id="XfR-Br-koE" customClass="HomeTabbarController" sceneMemberID="viewController">
                     <navigationItem key="navigationItem" id="0O8-B8-QI2"/>
                     <simulatedScreenMetrics key="simulatedDestinationMetrics"/>
                     <tabBar key="tabBar" contentMode="scaleToFill" id="ijA-Bw-wJo">
@@ -58,25 +57,10 @@
                     <view key="view" contentMode="scaleToFill" id="68l-1a-eXd">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="480"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <webView contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="MMN-jy-de5">
-                                <rect key="frame" x="0.0" y="64" width="320" height="367"/>
-                                <color key="backgroundColor" red="0.36078431370000003" green="0.38823529410000002" blue="0.4039215686" alpha="1" colorSpace="deviceRGB"/>
-                            </webView>
-                        </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                        <constraints>
-                            <constraint firstItem="MMN-jy-de5" firstAttribute="leading" secondItem="68l-1a-eXd" secondAttribute="leading" id="BZ7-1G-VSb"/>
-                            <constraint firstItem="MMN-jy-de5" firstAttribute="top" secondItem="QiE-Kf-ZfX" secondAttribute="bottom" id="rjX-7p-Zxm"/>
-                            <constraint firstItem="wTO-yZ-Cwv" firstAttribute="top" secondItem="MMN-jy-de5" secondAttribute="bottom" id="vcg-HX-U85"/>
-                            <constraint firstAttribute="trailing" secondItem="MMN-jy-de5" secondAttribute="trailing" id="x1f-d1-CYG"/>
-                        </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="85x-qf-iG0"/>
                     <simulatedScreenMetrics key="simulatedDestinationMetrics"/>
-                    <connections>
-                        <outlet property="webView" destination="MMN-jy-de5" id="4PL-Yc-YiZ"/>
-                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="nT1-vZ-Wwd" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -85,7 +69,7 @@
         <!--菱悦会-->
         <scene sceneID="4rN-oo-Fn8">
             <objects>
-                <navigationController id="ZDd-1w-OK7" sceneMemberID="viewController">
+                <navigationController storyboardIdentifier="LYHNavController" id="ZDd-1w-OK7" customClass="LYHNavController" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" tag="2" title="菱悦会" image="lingyuehui" id="Swh-x7-eg1"/>
                     <simulatedScreenMetrics key="simulatedDestinationMetrics"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="wk3-Op-6h0">
@@ -123,7 +107,7 @@
         <!--商城-->
         <scene sceneID="tXQ-kE-qFh">
             <objects>
-                <navigationController id="eGM-Mx-F2L" sceneMemberID="viewController">
+                <navigationController storyboardIdentifier="MallNavController" id="eGM-Mx-F2L" customClass="MallNavController" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" tag="3" title="商城" image="shangcheng" id="SgN-rB-5Xr"/>
                     <simulatedScreenMetrics key="simulatedDestinationMetrics"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="aHS-uA-sfb">
@@ -161,7 +145,7 @@
         <!--个人中心-->
         <scene sceneID="RIg-I1-2dG">
             <objects>
-                <navigationController id="Nzd-bE-YiA" sceneMemberID="viewController">
+                <navigationController storyboardIdentifier="PersonNavController" id="Nzd-bE-YiA" customClass="PersonNavController" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" tag="4" title="个人中心" image="dailiren" id="VwR-qX-dHZ"/>
                     <simulatedScreenMetrics key="simulatedDestinationMetrics"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="XKa-5M-7mU">
@@ -187,25 +171,10 @@
                     <view key="view" contentMode="scaleToFill" id="sX5-ti-Ro8">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="480"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <webView contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="dMT-SK-SLS">
-                                <rect key="frame" x="0.0" y="64" width="320" height="367"/>
-                                <color key="backgroundColor" red="0.36078431370000003" green="0.38823529410000002" blue="0.4039215686" alpha="1" colorSpace="deviceRGB"/>
-                            </webView>
-                        </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                        <constraints>
-                            <constraint firstItem="dMT-SK-SLS" firstAttribute="leading" secondItem="sX5-ti-Ro8" secondAttribute="leading" id="ev2-JW-0em"/>
-                            <constraint firstItem="dMT-SK-SLS" firstAttribute="top" secondItem="qd3-kE-vAl" secondAttribute="bottom" id="ex4-Dg-eLN"/>
-                            <constraint firstAttribute="trailing" secondItem="dMT-SK-SLS" secondAttribute="trailing" id="h2L-IB-dFh"/>
-                            <constraint firstItem="Hhp-fL-UxI" firstAttribute="top" secondItem="dMT-SK-SLS" secondAttribute="bottom" id="lrG-01-w5j"/>
-                        </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="Z1b-Vb-5qf"/>
                     <simulatedScreenMetrics key="simulatedDestinationMetrics"/>
-                    <connections>
-                        <outlet property="webView" destination="dMT-SK-SLS" id="hwW-Wm-Yp6"/>
-                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="sIf-MP-e7P" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -446,41 +415,6 @@
             </objects>
             <point key="canvasLocation" x="-778" y="1069"/>
         </scene>
-        <!--Home Push View Controller-->
-        <scene sceneID="5Hl-dp-DZi">
-            <objects>
-                <viewController storyboardIdentifier="HomePushViewController" id="QPB-2t-EMv" customClass="HomePushViewController" sceneMemberID="viewController">
-                    <layoutGuides>
-                        <viewControllerLayoutGuide type="top" id="h47-x3-0mp"/>
-                        <viewControllerLayoutGuide type="bottom" id="T7b-ta-2OH"/>
-                    </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="5od-FS-IyC">
-                        <rect key="frame" x="0.0" y="0.0" width="320" height="480"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <webView contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="FTa-7h-5PX">
-                                <rect key="frame" x="0.0" y="20" width="320" height="460"/>
-                                <color key="backgroundColor" red="0.36078431370000003" green="0.38823529410000002" blue="0.4039215686" alpha="1" colorSpace="deviceRGB"/>
-                            </webView>
-                        </subviews>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                        <constraints>
-                            <constraint firstAttribute="trailing" secondItem="FTa-7h-5PX" secondAttribute="trailing" id="7v1-uj-oYr"/>
-                            <constraint firstItem="FTa-7h-5PX" firstAttribute="top" secondItem="h47-x3-0mp" secondAttribute="bottom" id="OTZ-ZE-lwa"/>
-                            <constraint firstItem="FTa-7h-5PX" firstAttribute="leading" secondItem="5od-FS-IyC" secondAttribute="leading" id="aNc-BM-Ecy"/>
-                            <constraint firstItem="T7b-ta-2OH" firstAttribute="top" secondItem="FTa-7h-5PX" secondAttribute="bottom" id="l4C-W0-k2r"/>
-                        </constraints>
-                    </view>
-                    <simulatedScreenMetrics key="simulatedDestinationMetrics"/>
-                    <connections>
-                        <outlet property="web" destination="FTa-7h-5PX" id="znc-eh-XDr"/>
-                        <outlet property="webView" destination="FTa-7h-5PX" id="yTk-xV-scd"/>
-                    </connections>
-                </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="81y-oi-cW0" userLabel="First Responder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="-327" y="1097"/>
-        </scene>
         <!--快速注册-->
         <scene sceneID="XP7-yk-bPe">
             <objects>
@@ -513,6 +447,9 @@
                                 <state key="normal" title="下一步">
                                     <color key="titleColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                                 </state>
+                                <connections>
+                                    <action selector="goNext:" destination="G4n-KG-Jm5" eventType="touchUpInside" id="3ra-rB-adJ"/>
+                                </connections>
                             </button>
                             <label opaque="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="获取验证码" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="wBq-8K-dET">
                                 <rect key="frame" x="193" y="135" width="97" height="45"/>
@@ -547,6 +484,9 @@
                     <simulatedScreenMetrics key="simulatedDestinationMetrics"/>
                     <connections>
                         <outlet property="countdown" destination="wBq-8K-dET" id="zJh-RK-JNU"/>
+                        <outlet property="next" destination="7nW-6J-qx9" id="Ebj-Aq-Jtw"/>
+                        <outlet property="phone" destination="kLh-Ks-Ef8" id="cO8-Vs-hKs"/>
+                        <outlet property="security" destination="aAb-Wh-2aP" id="QR7-cF-fdl"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="o6c-hk-GIv" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -566,12 +506,15 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="kte-KX-A4r">
-                                <rect key="frame" x="30" y="135" width="260" height="45"/>
+                                <rect key="frame" x="30" y="205" width="260" height="45"/>
                                 <color key="backgroundColor" red="0.93333333330000001" green="0.38431372549999998" blue="0.090196078430000007" alpha="1" colorSpace="calibratedRGB"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="16"/>
                                 <state key="normal" title="注册">
                                     <color key="titleColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                                 </state>
+                                <connections>
+                                    <action selector="registerUser:" destination="WIH-h3-esB" eventType="touchUpInside" id="g1r-ev-OTz"/>
+                                </connections>
                             </button>
                             <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="输入密码" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="o94-oz-w6z">
                                 <rect key="frame" x="30" y="65" width="260" height="45"/>
@@ -581,19 +524,36 @@
                                 <fontDescription key="fontDescription" type="system" pointSize="16"/>
                                 <textInputTraits key="textInputTraits" secureTextEntry="YES"/>
                             </textField>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="再次输入密码" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="9yo-9n-ETI">
+                                <rect key="frame" x="30" y="130" width="260" height="45"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="45" id="DTN-ff-gQK"/>
+                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="45" id="iGh-ql-67V"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                                <textInputTraits key="textInputTraits" secureTextEntry="YES"/>
+                            </textField>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
+                            <constraint firstItem="9yo-9n-ETI" firstAttribute="top" secondItem="o94-oz-w6z" secondAttribute="bottom" constant="20" id="5Mr-ct-Ubc"/>
+                            <constraint firstAttribute="trailing" secondItem="9yo-9n-ETI" secondAttribute="trailing" constant="30" id="8q8-Yg-rYe"/>
                             <constraint firstItem="o94-oz-w6z" firstAttribute="top" secondItem="rH9-Pz-Y97" secondAttribute="bottom" constant="45" id="AZB-0D-lQ5"/>
                             <constraint firstItem="kte-KX-A4r" firstAttribute="trailing" secondItem="o94-oz-w6z" secondAttribute="trailing" id="CkQ-Kn-0Z6"/>
-                            <constraint firstItem="kte-KX-A4r" firstAttribute="top" secondItem="o94-oz-w6z" secondAttribute="bottom" constant="25" id="E7A-FG-9SF"/>
                             <constraint firstAttribute="trailing" secondItem="o94-oz-w6z" secondAttribute="trailing" constant="30" id="Hyb-OK-JXJ"/>
                             <constraint firstItem="o94-oz-w6z" firstAttribute="leading" secondItem="Xci-P0-aeN" secondAttribute="leading" constant="30" id="NR5-Fw-OTk"/>
                             <constraint firstItem="kte-KX-A4r" firstAttribute="leading" secondItem="o94-oz-w6z" secondAttribute="leading" id="RVJ-fF-3V9"/>
+                            <constraint firstItem="kte-KX-A4r" firstAttribute="top" secondItem="9yo-9n-ETI" secondAttribute="bottom" constant="30" id="hX4-wf-UOB"/>
+                            <constraint firstItem="9yo-9n-ETI" firstAttribute="leading" secondItem="Xci-P0-aeN" secondAttribute="leading" constant="30" id="mnk-hT-bNC"/>
                             <constraint firstItem="kte-KX-A4r" firstAttribute="height" secondItem="o94-oz-w6z" secondAttribute="height" id="uw5-eq-YO3"/>
                         </constraints>
                     </view>
                     <simulatedScreenMetrics key="simulatedDestinationMetrics"/>
+                    <connections>
+                        <outlet property="password" destination="o94-oz-w6z" id="ATq-Pn-Jtq"/>
+                        <outlet property="registerButton" destination="kte-KX-A4r" id="FxZ-Sj-Vre"/>
+                        <outlet property="secondPassWord" destination="9yo-9n-ETI" id="A0f-Ep-wZp"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="oaY-Kg-RTv" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>

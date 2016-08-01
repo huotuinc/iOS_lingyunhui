@@ -7,9 +7,10 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "PayModel.h"
 
 @interface HomePushViewController : UIViewController
-@property (strong, nonatomic) IBOutlet UIWebView *webView;
+@property (strong, nonatomic) WKWebView *webView;
 
 @property (nonatomic, strong) NSString *url;
 @end

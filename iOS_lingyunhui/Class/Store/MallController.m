@@ -7,6 +7,7 @@
 //
 
 #import "MallController.h"
+#import "HomeViewController.h"
 
 @interface MallController ()
 
@@ -16,22 +17,42 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    // Do any additional setup after loading the view.
+    
+    
+    
+    
+    
 }
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    
+    NSString * login = [[NSUserDefaults standardUserDefaults] objectForKey:LoginStatus];
+    if ([login isEqualToString:Success]) {
+        
+        HomeViewController *home = [[HomeViewController alloc] init];
+        UINavigationController *homeNav = [[UINavigationController alloc] initWithRootViewController:home];
+        NSString * path = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
+        NSString *fileConfig = [path stringByAppendingPathComponent:LYHAppConfig];
+        AppConfig *config = [NSKeyedUnarchiver unarchiveObjectWithFile:fileConfig];
+        home.HomeButtomUrl = config.mallBottomUrl;
+        home.HomeWebUrl = [NSString stringWithFormat:@"%@?back=1", config.mallUrl];
+        [self presentViewController:homeNav animated:YES completion:nil];
+    }else {
+        UIStoryboard *story = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+        LoginController *login = [story instantiateViewControllerWithIdentifier:@"LoginController"];
+        UINavigationController *loginNav = [[UINavigationController alloc] initWithRootViewController:login];
+        [self presentViewController:loginNav animated:YES completion:nil];
+    }
+}
+
+
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
 
-/*
-#pragma mark - Navigation
 
-// In a storyboard-based application, you will often want to do a little preparation before navigation
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    // Get the new view controller using [segue destinationViewController].
-    // Pass the selected object to the new view controller.
-}
-*/
 
 @end

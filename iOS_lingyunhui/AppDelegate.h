@@ -10,8 +10,11 @@
 
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
 
-@property (strong, nonatomic) UIWindow *window;
+@property (strong,  nonatomic) UIWindow *window;
 
+@property (nonatomic , strong) NSString *userAgent;
+
+- (void)resetUserAgent:(NSString *) goUrl;
 
 @end
 

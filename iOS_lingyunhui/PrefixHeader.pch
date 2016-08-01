@@ -13,30 +13,43 @@
 #import <MJRefresh/MJRefresh.h>
 #import <SVProgressHUD/SVProgressHUD.h>
 #import "UserLoginTool.h"
-#import <NJKWebViewProgress/NJKWebViewProgress.h>
-#import <NJKWebViewProgress/NJKWebViewProgressView.h>
+#import <WebKit/WebKit.h>
+#import <ShareSDK/ShareSDK.h>
+#import <ShareSDKUI/ShareSDK+SSUI.h>
+#import "MD5Encryption.h"
+#import "Base64Util.h"
+#import "UserInfo.h"
+#import "AppDelegate.h"
+#import "HomePushViewController.h"
+#import "AppConfig.h"
+#import "BarItemMenus.h"
+#import "BarItem.h"
+#import "LoginController.h"
+#import "AppDelegate.h"
+#import "WeixinUserInfo.h"
+#import "UIViewController+MonitorNetWork.h"
 
 // Include any system framework and library headers here that should be included in all compilation units.
 // You will also need to set the Prefix Header build setting of one or more of your targets to reference this file.
 /******************************************************************************************************************************************/
-#define LWNewFeatureImageCount 3
+#define LWNewFeatureImageCount 1
 
 #define ScreenHeight  [UIScreen mainScreen].bounds.size.height
 #define ScreenWidth  [UIScreen mainScreen].bounds.size.width
 
 #define LWColor(r, g, b) [UIColor colorWithRed:(r)/255.0 green:(g)/255.0 blue:(b)/255.0 alpha:1.0]
 
-#define HuoBanMallBuyNavColor [UIColor colorWithRed:0.322 green:0.604 blue:0.110 alpha:1.000]
+#define HuoBanMallBuyNavColor [UIColor colorWithRed:0.902 green:0.000 blue:0.075 alpha:1.000]
 
 /******************************************************************************************************************************************/
 
 /**微信支付*/
-#define WeiXinPayId @"wx7f47df3d33fd57f7"
+#define WeiXinPayId @"wx7fa14ed5f7cfac4d"
 #define WeiXinPayMerchantId @"1323237601"
 #define wxpayKey @"21b7468d09e647ecae5580a2f458e68e"
 
 /**shareSDK */
-#define ShareSDKAppKey @"135e0c5dd084c"
+#define ShareSDKAppKey @"135e06e56f4e3"
 
 /**新浪微博*/
 #define XinLangAppkey @"2157595845"
@@ -48,29 +61,30 @@
 #define QQappSecret @"fTiZs1JDfss51pA6"
 
 /**微信*/
-#define WeiXinAppID @"wx7f47df3d33fd57f7"
-#define WeiXinAppSecret @"a98a14f00e2e358fb3cb8fe7ed06051b"
+#define WeiXinAppID @"wx7fa14ed5f7cfac4d"
+#define WeiXinAppSecret @"41bdf049e917ff623c7d04c9e7a4ca92"
 
 
 
 /******************************************************************************************************************************************/
 
 //服务器正式地址
-#define MKMainUrl @"duobao.51flashmall.com:8091/app"
+#define MKMainUrl @"http://mallapi.huobanj.cn"
 
 
 /**时间*/
 #define apptimesSince1970 [NSString stringWithFormat:@"%.0f",([[[NSDate alloc] init] timeIntervalSince1970]*1000)]
 
 //网络请求的固定参数
-#define HTYMRSCREAT @"4165a8d240b29af3f41818d10599d0d1"  //火图安全网络请求安全协议
+#define HTYMRSCREAT @"9389e8a5c32eefa3134340640fb4cead"  //火图安全网络请求安全协议
 
 /**平台*/
-#define OPERATION_parame @"duobao2016AP"
+#define OPERATION_parame @"lingyunhui2016ap"
 
 /**应用版本号*/
 #define AppVersion [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"]
-
+/**本地存储的版本号*/
+#define LocalAppVersion @"LocalAppVersion"
 /**设备唯一号*/
 #define  DeviceNo ([[UIDevice currentDevice].identifierForVendor UUIDString])
 
@@ -85,9 +99,11 @@
 
 /*********用户属性*****************/
 #define CannelLoginFailure @"CannelLogin" //取消登陆
-#define UserInfo @"UserInfo"
+#define UserInfoLYH @"UserInfoLYH"
 #define GlobalInfo @"GlobalInfo"
-#define DefaultAddress @"DefaultAddress"
+#define LYHUserId @"LYHUserId"
+#define LYHAppConfig @"LYHAppConfig"
+#define ButtomBarItems @"ButtomBarItems"
 
 /********登陆标志************/
 #define LoginStatus @"LoginStatus" //登录标志
@@ -96,12 +112,16 @@
 
 /*********商城******/
 #define PayTypeflat @"paytype" //支付数据存档
-#define HuoBanMallBuyAppId @"huotu686ad1fe2bd8a02ok" // app签名用于商城
+#define HuoBanMallBuyAppId @"7986d22352bf5acf37981b8e991edd76" // app签名用于商城
 #define HuoBanMallBuyApp_Merchant_Id @"6987" //商户号
 #define WebSit @"WebSit" // 商城支付回调地址
 #define LoginFromMallNot @"LoginFromMallNot"  //商城登录成功后发送的通知
 #define GotoMallSecond @"GotoMallSecond" //bar点击商城载入
+#define MallName @"菱云汇"
 
+/*********通知******/
+#define ResetAllWebAgent @"ResetAllWebAgent"
+#define GoToNextWeb @"GoToNextWeb"
 
 #ifdef DEBUG
 #define LWLog(...) NSLog(__VA_ARGS__)

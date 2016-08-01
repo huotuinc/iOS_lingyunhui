@@ -15,9 +15,19 @@
 
 @property (weak, nonatomic) IBOutlet UITextField *password;
 
+@property (strong, nonatomic) IBOutlet UITextField *secondPassWord;
+
 @property (weak, nonatomic) IBOutlet UIButton *registerButton;
 
 @property (nonatomic, assign) BOOL isForget;
+
+@property (nonatomic, assign) BOOL isWeixinLogin;
+
+@property (nonatomic, assign) BOOL isphoneLogin;
+
+@property (nonatomic, strong) WeixinUserInfo *weixin;
+
+@property (nonatomic, strong) NSString *goUrl;
 
 - (IBAction)registerUser:(id)sender;
 

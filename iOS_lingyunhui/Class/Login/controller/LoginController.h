@@ -15,6 +15,9 @@
 @property (weak, nonatomic) IBOutlet UIButton *forgot;
 @property (weak, nonatomic) IBOutlet UIButton *regisn;
 @property (weak, nonatomic) IBOutlet UIButton *weixin;
+
+@property (nonatomic, strong) NSString *goUrl;
+
 - (IBAction)loginAction:(id)sender;
 
 - (IBAction)forgetAction:(id)sender;

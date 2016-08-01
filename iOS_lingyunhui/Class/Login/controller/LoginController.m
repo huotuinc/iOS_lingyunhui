@@ -12,7 +12,7 @@
 #import <ShareSDK/ShareSDK.h>
 #import "MD5Encryption.h"
 #import "RegisterFirstController.h"
-
+#import <BlocksKit/UIBarButtonItem+BlocksKit.h>
 @interface LoginController ()
 
 @end
@@ -21,7 +21,10 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
+    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] bk_initWithTitle:@"取消" style:UIBarButtonItemStylePlain handler:^(id sender) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:CannelLoginFailure object:nil];
+        [self dismissViewControllerAnimated:YES completion:nil];
+    }];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -41,46 +44,65 @@
             [SVProgressHUD showErrorWithStatus:@"密码长度6-16位"];
         }else {
             
-            dic[@"username"] = self.userName.text;
+            dic[@"mobile"] = self.userName.text;
             
-            dic[@"password"] = [MD5Encryption md5by32:self.password.text];
+            dic[@"password"] = self.password.text;
             
             [SVProgressHUD showWithStatus:@"登录中"];
-            [UserLoginTool loginRequestGet:@"login" parame:dic success:^(id json) {
-                
+            [UserLoginTool loginRequestPostWithFile:@"/ArvatoUser/LoginByMobile" parame:dic success:^(id json) {
                 LWLog(@"%@",json);
-                if ([json[@"systemResultCode"] intValue] == 1 && [json[@"resultCode"] intValue]==1) {
-                    [SVProgressHUD dismiss];
-                    [self loginSuccessWith:json[@"resultData"]];
-                }else {
-                    [SVProgressHUD showErrorWithStatus:json[@"resultDescription"]];
+                [SVProgressHUD dismiss];
+                if ([json[@"code"] integerValue] == 200) {
+                    UserInfo *user = [UserInfo mj_objectWithKeyValues:json[@"data"]];
+                    NSString * path = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
+                    NSString *fileName = [path stringByAppendingPathComponent:UserInfoLYH];
+                    [NSKeyedArchiver archiveRootObject:user toFile:fileName];
+                    [[NSUserDefaults standardUserDefaults] setObject:user.userId forKey:LYHUserId];
+                    
+                    [[NSUserDefaults standardUserDefaults] setObject:Success forKey:LoginStatus];
+                    
+                    AppDelegate *app = (AppDelegate *)[UIApplication sharedApplication].delegate;
+                    [app resetUserAgent:_goUrl];
+                    
+                    [SVProgressHUD showSuccessWithStatus:@"登录成功"];
+                    
+                    [self dismissViewControllerAnimated:YES completion:nil];
                 }
-                
             } failure:^(NSError *error) {
-                
                 LWLog(@"%@",error);
-                
-            }];
+            } withFileKey:nil ];
+            
+
         }
     }
 }
 
+
+//忘记密码
 - (IBAction)forgetAction:(id)sender {
     
     RegisterFirstController *reg = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"RegisterFirstController"];
+    reg.isphoneLogin = NO;
+    reg.isWeixinLogin = NO;
     reg.isForget = YES;
     [self.navigationController pushViewController:reg animated:YES];
     
     
 }
 
+//手机注册
 - (IBAction)registAction:(id)sender {
     
     RegisterFirstController *reg = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"RegisterFirstController"];
+    reg.isphoneLogin = YES;
+    reg.isWeixinLogin = NO;
     reg.isForget = NO;
+    reg.goUrl = self.goUrl;
     [self.navigationController pushViewController:reg animated:YES];
 }
 
+
+//微信授权登录
 - (IBAction)wenxinLogin:(id)sender {
     
     self.weixin.userInteractionEnabled = NO;
@@ -89,27 +111,54 @@
         if (state == SSDKResponseStateSuccess) {
             LWLog(@"%@",user);
             
-            NSString *unionid = [user.rawData objectForKey:@"unionid"];
             
+            WeixinUserInfo *weixin = [[WeixinUserInfo alloc] init];
+            weixin.city = user.rawData[@"city"];
+            weixin.country = user.rawData[@"country"];
+            weixin.headimgurl = user.rawData[@"headimgurl"];
+            weixin.language = user.rawData[@"language"];
+            weixin.nickname = user.rawData[@"nickname"];
+            weixin.openid = user.rawData[@"openid"];
+            weixin.province = user.rawData[@"province"];
+            weixin.sex = user.rawData[@"sex"];
+            weixin.unionid = user.rawData[@"unionid"];
+
             NSMutableDictionary *dic = [NSMutableDictionary dictionary];
-            dic[@"username"] = user.nickname;
-            dic[@"unionId"] = unionid;
-            dic[@"head"] = user.icon;
-            dic[@"type"] = @"1";
+            dic[@"unionId"] = weixin.unionid;
+            dic[@"openId"] = weixin.openid;
             
-            [SVProgressHUD showWithStatus:@"登录中"];
             
-            [UserLoginTool loginRequestGet:@"authLogin" parame:dic success:^(id json) {
+            [UserLoginTool loginRequestPostWithFile:@"/ArvatoUser/LoginByWeiXin" parame:dic success:^(id json) {
                 LWLog(@"%@",json);
-                if ([json[@"systemResultCode"] intValue] == 1 && [json[@"resultCode"] intValue]==1) {
-                    [self loginSuccessWith:json[@"resultData"]];
+                if ([json[@"code"] intValue] == 200) {
+                    UserInfo *user = [UserInfo mj_objectWithKeyValues:json[@"data"]];
+                    NSString * path = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
+                    NSString *fileName = [path stringByAppendingPathComponent:UserInfoLYH];
+                    [NSKeyedArchiver archiveRootObject:user toFile:fileName];
+                    [[NSUserDefaults standardUserDefaults] setObject:user.userId forKey:LYHUserId];
+                    
+                    [[NSUserDefaults standardUserDefaults] setObject:Success forKey:LoginStatus];
+                    
+                    AppDelegate *app = (AppDelegate *)[UIApplication sharedApplication].delegate;
+                    [app resetUserAgent:_goUrl];
+                    
+                    [self dismissViewControllerAnimated:YES completion:nil];
+                    
+                }else if ([json[@"code"] intValue] == 403){
+                    
+                    RegisterFirstController *reg = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"RegisterFirstController"];
+                    reg.isphoneLogin = NO;
+                    reg.isWeixinLogin = YES;
+                    reg.isForget = NO;
+                    reg.weixin = weixin;
+                    [self.navigationController pushViewController:reg animated:YES];
+                    
+                }else {
+                    [SVProgressHUD showErrorWithStatus:[NSString stringWithFormat:@"%@", json[@"msg"]]];
                 }
-                [SVProgressHUD dismiss];
             } failure:^(NSError *error) {
-                LWLog(@"%@",error);
-                [SVProgressHUD dismiss];
-                self.weixin.userInteractionEnabled = YES;
-            }];
+                LWLog(@"%@", error);
+            } withFileKey:nil];
             
         }else {
             self.weixin.userInteractionEnabled = YES;
@@ -119,37 +168,14 @@
     
 }
 
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    [self.view endEditing:YES];
+}
 
 
 
 - (void)loginSuccessWith:(NSDictionary *) dic {
     
-//    UserModel *user = [UserModel mj_objectWithKeyValues:dic[@"user"]];
-//    //    NSLog(@"userModel: %@",user);
-//    
-//    NSString * path = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
-//    NSString *fileName = [path stringByAppendingPathComponent:UserInfo];
-//    [NSKeyedArchiver archiveRootObject:user toFile:fileName];
-//    [[NSUserDefaults standardUserDefaults] setObject:Success forKey:LoginStatus];
-//    //app是否在审核
-//    [[NSUserDefaults standardUserDefaults] setObject:[NSString stringWithFormat:@"%d",user.forIosCheck] forKey:AppExamine];
-//    LWLog(@"%@",[[NSUserDefaults standardUserDefaults] stringForKey:AppExamine]);
-//    //保存新的token
-//    [[NSUserDefaults standardUserDefaults] setObject:user.token forKey:AppToken];
-//    //购物车结算登陆时 需要提交数据
-//    [self postDataToServe];
-//    [self dismissViewControllerAnimated:YES completion:nil];
-//    /**
-//     *  //////
-//     */
-//    AdressModel *address = [AdressModel mj_objectWithKeyValues:dic[@"user"][@"appMyAddressListModel"]];
-//    NSString *fileNameAdd = [path stringByAppendingPathComponent:DefaultAddress];
-//    [NSKeyedArchiver archiveRootObject:address toFile:fileNameAdd];
-//    
-//    if (self.isFromMall) {
-//        [[NSNotificationCenter defaultCenter] postNotificationName:LoginFromMallNot object:nil];
-//    }
-    
-    
+
 }
 @end

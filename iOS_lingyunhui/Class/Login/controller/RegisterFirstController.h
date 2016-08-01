@@ -14,8 +14,15 @@
 @property (weak, nonatomic) IBOutlet UILabel *countdown;
 @property (weak, nonatomic) IBOutlet UIButton *next;
 
+@property (nonatomic, assign) BOOL isphoneLogin;
+
 @property (nonatomic, assign) BOOL isForget;
 
+@property (nonatomic, assign) BOOL isWeixinLogin;
+
+@property (nonatomic, strong) WeixinUserInfo *weixin;
+
+@property (nonatomic, strong) NSString *goUrl;
 - (void)getSecurtityCode;
 
 - (IBAction)goNext:(id)sender;

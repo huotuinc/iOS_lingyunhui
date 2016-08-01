@@ -10,4 +10,6 @@
 
 @interface LYHController : UIViewController
 
+@property (nonatomic, strong) WKWebView *webView;
+
 @end
